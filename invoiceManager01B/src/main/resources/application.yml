@@ -9,11 +9,13 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
-      properties:
-        hibernate:
-          globally_quoted_indentifiers: true
-          dialect: org.hibernate.dialect.MySQL8Dialect
-          format_sql: true
-    sql:
-      init:
-        mode: never
+    properties:
+      hibernate:
+        globally_quoted_indentifiers: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true

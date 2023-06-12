@@ -1,6 +1,7 @@
 package com.vladimirpandurov.invoiceManager01B.repository;
 
 import com.vladimirpandurov.invoiceManager01B.domain.User;
+import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 
 import java.util.Collection;
 
@@ -13,4 +14,8 @@ public interface UserRepository<T extends User> {
     Boolean delete(Long id);
 
     /* More Complex Operations */
+    User getUserByEmail(String email);
+    void sendVerificationCode(UserDTO user);
+
+    User verifyCode(String email, String code);
 }

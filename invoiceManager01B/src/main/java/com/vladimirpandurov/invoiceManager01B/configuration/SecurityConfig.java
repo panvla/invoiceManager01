@@ -1,5 +1,6 @@
 package com.vladimirpandurov.invoiceManager01B.configuration;
 
+import com.vladimirpandurov.invoiceManager01B.filter.CustomAuthorizationFilter;
 import com.vladimirpandurov.invoiceManager01B.handler.CustomAccessDeniedHandler;
 import com.vladimirpandurov.invoiceManager01B.handler.CustomAutehnticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -27,6 +29,7 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final BCryptPasswordEncoder encoder;
     private final UserDetailsService userDetailsService;
+    private final CustomAuthorizationFilter customAuthorizationFilter;
 
     private static final String[] PUBLIC_URLS = {"/user/login/**", "/user/verify/code/**"};
 
@@ -39,6 +42,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests().requestMatchers(HttpMethod.DELETE, "/customer/delete/**").hasAnyAuthority("DELETE:CUSTOMER");
         http.exceptionHandling().accessDeniedHandler(customAccessDeniedHandler).authenticationEntryPoint(customAutehnticationEntryPoint);
         http.authorizeHttpRequests().anyRequest().authenticated();
+        http.addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
 
     }

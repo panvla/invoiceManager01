@@ -8,5 +8,5 @@ public interface UserService {
     UserDTO getUserByEmail(String email);
     void sendVerificationCode(UserDTO user);
     UserDTO verifyCode(String email, String code);
-    User getUser(String email);
+    UserDTO getUser(String email);
 }

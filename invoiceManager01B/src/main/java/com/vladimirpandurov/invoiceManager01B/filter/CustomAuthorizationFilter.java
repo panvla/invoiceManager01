@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import static com.vladimirpandurov.invoiceManager01B.utils.ExceptionUtils.processError;
 import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -29,7 +30,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Slf4j
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
     private static final String TOKEN_PREFIX = "Bearer ";
-    private static final String[] PUBLIC_ROUTES = {"/user/login", "/user/verify/code", "/user/register"};
+    private static final String[] PUBLIC_ROUTES = {"/user/login", "/user/verify/code", "/user/register","/user/refresh/token"};
     private static final String HTTP_OPTIONS_METHOD = "OPTIONS";
     private final TokenProvider tokenProvider;
     protected static final String TOKEN_KEY = "token";
@@ -50,7 +51,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         }catch (Exception exception){
             log.error(exception.getMessage());
-            //processError(request, response, exception);
+            processError(request, response, exception);
         }
     }
 

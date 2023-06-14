@@ -1,5 +1,6 @@
 package com.vladimirpandurov.invoiceManager01B.domain;
 
+import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,15 +10,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import static com.vladimirpandurov.invoiceManager01B.dtomapper.UserDTOMapper.fromUser;
+
 @RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
 
     private final User user;
-    private final String permissions;
+    private final Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Arrays.stream(permissions.split(",".trim())).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        return Arrays.stream(this.role.getPermission().split(",".trim())).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
     @Override
@@ -48,5 +51,9 @@ public class UserPrincipal implements UserDetails {
     @Override
     public boolean isEnabled() {
         return this.user.isEnabled();
+    }
+
+    public UserDTO getUser() {
+        return fromUser(this.user, role);
     }
 }

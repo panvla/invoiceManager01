@@ -8,7 +8,9 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.vladimirpandurov.invoiceManager01B.domain.User;
 import com.vladimirpandurov.invoiceManager01B.domain.UserPrincipal;
+import com.vladimirpandurov.invoiceManager01B.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,11 +30,15 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
 @Component
+@RequiredArgsConstructor
 public class TokenProvider {
+
+    private final UserService userService;
+
     private static final String GET_ARRAYS_LLC = "GET_ARRAYS_LLC";
     private static final String CUSTOMER_MANAGEMENT_SERVICE = "CUSTOMER_MANAGEMENT_SERVICE";
     private static final String AUTHORITIES = "authorities";
-    private static final long ACCESS_TOKE_EXPIRATION_TIME = 1_800_000;
+    private static final long ACCESS_TOKE_EXPIRATION_TIME = 100;
     private static final long REFRESH_TOKEN_EXPIRATION_TIME = 432_000_000;
     private static final String TOKEN_CANNOT_BE_VERIFIED = "Token cannot be verified";
     @Value("${jwt.secret}")
@@ -79,7 +85,7 @@ public class TokenProvider {
     }
 
     public Authentication getAuthentication(String email, List<GrantedAuthority> authorities, HttpServletRequest request) {
-        UsernamePasswordAuthenticationToken userPasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
+        UsernamePasswordAuthenticationToken userPasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userService.getUserByEmail(email), null, authorities);
         userPasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         return userPasswordAuthenticationToken;
     }

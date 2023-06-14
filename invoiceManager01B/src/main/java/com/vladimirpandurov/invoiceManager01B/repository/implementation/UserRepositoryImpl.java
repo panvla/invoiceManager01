@@ -4,6 +4,7 @@ import com.vladimirpandurov.invoiceManager01B.domain.Role;
 import com.vladimirpandurov.invoiceManager01B.domain.User;
 import com.vladimirpandurov.invoiceManager01B.domain.UserPrincipal;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
+import com.vladimirpandurov.invoiceManager01B.enumeration.VerificationType;
 import com.vladimirpandurov.invoiceManager01B.exception.ApiException;
 import com.vladimirpandurov.invoiceManager01B.repository.RoleRepository;
 import com.vladimirpandurov.invoiceManager01B.repository.UserRepository;
@@ -31,9 +32,11 @@ import java.util.UUID;
 
 import static com.vladimirpandurov.invoiceManager01B.enumeration.RoleType.ROLE_USER;
 import static com.vladimirpandurov.invoiceManager01B.enumeration.VerificationType.ACCOUNT;
+import static com.vladimirpandurov.invoiceManager01B.enumeration.VerificationType.PASSWORD;
 import static com.vladimirpandurov.invoiceManager01B.query.UserQuery.*;
 import static com.vladimirpandurov.invoiceManager01B.utils.SmsUtils.sendSMS;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.apache.commons.lang3.time.DateFormatUtils.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 @Repository
@@ -124,7 +127,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             throw new UsernameNotFoundException("User not found in the database");
         }else {
             log.info("User found in the database: {}", email);
-            return new UserPrincipal(user, roleRepository.getRoleByUserId(user.getId()).getPermission());
+            return new UserPrincipal(user, roleRepository.getRoleByUserId(user.getId()));
         }
     }
     @Override
@@ -142,7 +145,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     @Override
     public void sendVerificationCode(UserDTO user) {
-        String expirationDate = DateFormatUtils.format(addDays(new Date(), 1), DATE_FORMAT);
+        String expirationDate = format(addDays(new Date(), 1), DATE_FORMAT);
         String verificationCode = randomAlphabetic(8).toUpperCase();
         try{
             jdbc.update(DELETE_VERIFICATION_CODE_BY_USER_ID, Map.of("id", user.getId()));
@@ -172,6 +175,74 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             throw new ApiException("Could not find record");
         }catch (Exception exception){
             throw new ApiException("An error occurred.Please try again.");
+        }
+    }
+
+    @Override
+    public void resetPassword(String email) {
+        if(getEmailCount(email.trim().toLowerCase()) <= 0) throw new ApiException("There is no account for this email address.");
+
+        try{
+
+                String expirationDate = format(addDays(new Date(), 1), DATE_FORMAT);
+                User user = getUserByEmail(email);
+                String verificationUrl = getVerificationUrl(UUID.randomUUID().toString(), PASSWORD.getType());
+                jdbc.update(DELETE_PASSWORD_VERIFICATION_BY_USER_ID_QUERY, Map.of("userId", user.getId()));
+                jdbc.update(INSERT_PASSWORD_VERIFICATION_QUERY, Map.of("userId", user.getId(), "url", verificationUrl, "expirationDate", expirationDate));
+                //TODO send email with url to user
+                log.info("Verification URL: {}", verificationUrl);
+
+        }catch (Exception exception){
+            throw new ApiException("An error ocurred. Please try again.");
+        }
+    }
+
+    @Override
+    public User verifyPasswordKey(String key) {
+        if(isLinkExpired(key, PASSWORD)) throw new ApiException("This link is expired. Please reset your password again.");
+        try{
+            User user =  jdbc.queryForObject(SELECT_USER_BY_PASSWORD_URL_QUERY, Map.of("url", getVerificationUrl(key, PASSWORD.getType())), new UserRowMapper());
+            //jdbc.update(DELETE_USER_FROM_PASSWORD_VERIFICATION_QUERY, Map.of("id", user.getId()));
+            return user;
+        }catch (EmptyResultDataAccessException exception){
+            throw new ApiException("This link is not valid. Please rest your password again.");
+        }catch (Exception exception) {
+            throw new ApiException("An error occurred. Please try again");
+        }
+    }
+
+    @Override
+    public void renewPassword(String key, String password, String confirmPassword) {
+        if(!password.equals(confirmPassword)) throw new ApiException("Password don't match. Please try again.");
+        try{
+            jdbc.update(UPDATE_USER_PASSWORD_BY_URL_QUERY, Map.of("password", encoder.encode(password), "url", getVerificationUrl(key, PASSWORD.getType())));
+            jdbc.update(DELETE_VERIFICATION_BY_URL_QUERY, Map.of( "url", getVerificationUrl(key, PASSWORD.getType())));
+        }catch (Exception exception){
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public User verifyAccountKey(String key) {
+        try{
+            User user = jdbc.queryForObject(SELECT_USER_BY_ACCOUNT_URL_QUERY, Map.of("url", getVerificationUrl(key, ACCOUNT.getType())), new UserRowMapper());
+            jdbc.update(UPDATE_USER_ENABLED_QUERY, Map.of("enabled", true, "id", user.getId()));
+            return user;
+        }catch (EmptyResultDataAccessException exception){
+            throw new ApiException("This link is not valid");
+        }catch (Exception exception) {
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    private Boolean isLinkExpired(String key, VerificationType password) {
+        try{
+            return jdbc.queryForObject(SELECT_EXPIRATION_BY_URL, Map.of("url", getVerificationUrl(key,password.getType())), Boolean.class);
+        }catch (EmptyResultDataAccessException exception){
+            throw new ApiException("This link is not valid. Please rest your password again.");
+        }catch (Exception exception) {
+            throw new ApiException("An error occurred. Please try again");
         }
     }
 

@@ -237,7 +237,7 @@ public class UserResource {
             Authentication authentication = this.authenticationManager.authenticate(unauthenticated(email, password));
             return authentication;
         }catch (Exception exception){
-            ExceptionUtils.processError(request, response,exception);
+            //ExceptionUtils.processError(request, response,exception);
             throw new ApiException((exception.getMessage()));
         }
     }

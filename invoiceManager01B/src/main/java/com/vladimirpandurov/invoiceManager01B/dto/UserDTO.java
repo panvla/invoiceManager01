@@ -22,7 +22,7 @@ public class UserDTO {
     private String imageUrl;
     private boolean enabled;
     private boolean isNotLocked;
-    private boolean isUsingMfa;
+    private boolean usingMfa;
     private LocalDateTime createdAt;
     private String roleName;
     private String permissions;

@@ -6,10 +6,13 @@ import com.vladimirpandurov.invoiceManager01B.domain.UserPrincipal;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import com.vladimirpandurov.invoiceManager01B.exception.ApiException;
 import com.vladimirpandurov.invoiceManager01B.form.LoginForm;
+import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
+import com.vladimirpandurov.invoiceManager01B.form.UpdatePasswordForm;
 import com.vladimirpandurov.invoiceManager01B.provider.TokenProvider;
 import com.vladimirpandurov.invoiceManager01B.service.RoleService;
 import com.vladimirpandurov.invoiceManager01B.service.UserService;
 import com.vladimirpandurov.invoiceManager01B.utils.ExceptionUtils;
+import com.vladimirpandurov.invoiceManager01B.utils.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +28,11 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.vladimirpandurov.invoiceManager01B.dtomapper.UserDTOMapper.toUser;
+import static com.vladimirpandurov.invoiceManager01B.utils.UserUtils.getAuthenticatedUser;
+import static com.vladimirpandurov.invoiceManager01B.utils.UserUtils.getLoggedInUser;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.security.authentication.UsernamePasswordAuthenticationToken.unauthenticated;
 
@@ -48,14 +54,12 @@ public class UserResource {
     public ResponseEntity<HttpResponse> login(@RequestBody @Valid LoginForm loginForm) {
 
         Authentication authentication = authenticate(loginForm.getEmail(), loginForm.getPassword());
-        UserDTO user = getAuthenticatedUser(authentication);
+        UserDTO user = getLoggedInUser(authentication);
         return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user);
 
     }
 
-    private UserDTO getAuthenticatedUser(Authentication authentication) {
-        return ((UserPrincipal) authentication.getPrincipal()).getUser();
-    }
+
 
 
 
@@ -75,8 +79,7 @@ public class UserResource {
 
     @GetMapping("/profile")
     public ResponseEntity<HttpResponse> profile(Authentication authentication){
-        UserDTO user = this.userService.getUserByEmail(authentication.getName());
-        System.out.println(authentication.getPrincipal());
+        UserDTO user = this.userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail());
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                         .timeStamp(LocalDateTime.now().toString())
@@ -154,6 +157,20 @@ public class UserResource {
                 .build()
         );
     }
+    @PatchMapping("/update/password")
+    public ResponseEntity<HttpResponse> updatePassword(Authentication authentication, @RequestBody @Valid UpdatePasswordForm form) {
+        UserDTO userDTO = getAuthenticatedUser(authentication);
+        this.userService.updatePassword(userDTO.getId(), form.getCurrentPassword(), form.getNewPassword(), form.getConfirmNewPassword());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                .timeStamp(LocalDateTime.now().toString())
+                .message("Password updated successfully")
+                .status(HttpStatus.OK)
+                .statusCode(HttpStatus.OK.value())
+                .build()
+        );
+    }
+
     @GetMapping("/verify/account/{key}")
     public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {
 
@@ -170,7 +187,7 @@ public class UserResource {
     public ResponseEntity<HttpResponse> refreshToken(HttpServletRequest request) {
         if(isHeaderAndTokenValid(request)){
             String token = request.getHeader(AUTHORIZATION).substring(TOKEN_PREFIX.length());
-            UserDTO user = userService.getUserByEmail(tokenProvider.getSubject(token, request));
+            UserDTO user = userService.getUserById(tokenProvider.getSubject(token, request));
             return ResponseEntity.ok().body(
                     HttpResponse.builder()
                             .timeStamp(LocalDateTime.now().toString())
@@ -189,6 +206,20 @@ public class UserResource {
                 .build()
         );
     }
+    @PatchMapping("/update")
+    public ResponseEntity<HttpResponse> updateUser(@RequestBody @Valid UpdateForm user) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(2);
+        UserDTO updatedUser = this.userService.updateUserDetails(user);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                .timeStamp(LocalDateTime.now().toString())
+                .data(Map.of("user", updatedUser))
+                .message("User updated")
+                .status(HttpStatus.OK)
+                .statusCode(HttpStatus.OK.value())
+                .build()
+        );
+    }
 
     private boolean isHeaderAndTokenValid(HttpServletRequest request) {
         return request.getHeader(AUTHORIZATION) != null && request.getHeader(AUTHORIZATION).startsWith(TOKEN_PREFIX)
@@ -203,7 +234,7 @@ public class UserResource {
                         .timeStamp(LocalDateTime.now().toString())
                         .data(Map.of("user", user,
                                 "access_token", tokenProvider.createAccessToken(getUserPrincipal(user)),
-                                "refresh_toke", tokenProvider.createRefreshToken(getUserPrincipal(user))))
+                                "refresh_token", tokenProvider.createRefreshToken(getUserPrincipal(user))))
                         .message("Login Success")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())

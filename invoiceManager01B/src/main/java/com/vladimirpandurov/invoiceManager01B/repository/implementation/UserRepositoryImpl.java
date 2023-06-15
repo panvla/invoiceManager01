@@ -6,6 +6,7 @@ import com.vladimirpandurov.invoiceManager01B.domain.UserPrincipal;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import com.vladimirpandurov.invoiceManager01B.enumeration.VerificationType;
 import com.vladimirpandurov.invoiceManager01B.exception.ApiException;
+import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
 import com.vladimirpandurov.invoiceManager01B.repository.RoleRepository;
 import com.vladimirpandurov.invoiceManager01B.repository.UserRepository;
 import com.vladimirpandurov.invoiceManager01B.rowmapper.UserRowMapper;
@@ -90,7 +91,14 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     @Override
     public User get(Long id) {
-        return null;
+        try{
+            return jdbc.queryForObject(SELECT_USER_BY_ID_QUERY, Map.of("id", id), new UserRowMapper());
+        }catch (EmptyResultDataAccessException exception) {
+            throw new ApiException("No User found by id: " + id);
+        }catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please tyr again.");
+        }
     }
 
     @Override
@@ -107,13 +115,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         return jdbc.queryForObject(COUNT_USER_EMAIL_QUERY, Map.of("email", email), Integer.class);
     }
 
-    private SqlParameterSource getSqlParameterSource(User user) {
-        return new MapSqlParameterSource()
-                .addValue("firstName", user.getFirstName())
-                .addValue("lastName", user.getLastName())
-                .addValue("email", user.getEmail())
-                .addValue("password", encoder.encode(user.getPassword()));
-    }
+
 
     private String getVerificationUrl(String key, String type) {
         return ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/verify/" + type + "/" + key).toUriString();
@@ -234,6 +236,59 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }catch (Exception exception) {
             throw new ApiException("An error occurred. Please try again.");
         }
+    }
+
+    @Override
+    public User updateUserDetails(UpdateForm user) {
+        try{
+            jdbc.update(UPDATE_USER_DETAILS_QUERY, getUserDetailsSqlParameterSource(user));
+            log.info(getUserDetailsSqlParameterSource(user).toString());
+            return get(user.getId());
+        }catch(EmptyResultDataAccessException exception){
+            throw new ApiException("No User found by id: " + user.getId());
+        }catch (Exception exception){
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred.Please try again.");
+        }
+    }
+
+    @Override
+    public void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword) {
+        if(!newPassword.equals(confirmNewPassword)){
+            throw new ApiException("Passwords don't match. Please try again.");
+        }
+        User user = get(id);
+        if(encoder.matches(currentPassword, user.getPassword())){
+            try{
+                jdbc.update(UPDATE_USER_PASSWORD_BY_ID_QUERY, Map.of("userId", id, "password", encoder.encode(newPassword)));
+            }catch (Exception exception){
+                log.error(exception.getMessage());
+                throw new ApiException("An error occurred. Please try again.");
+            }
+        }else{
+            throw new ApiException("Incorrect current password. Please try again.");
+        }
+    }
+
+
+    private SqlParameterSource getUserDetailsSqlParameterSource(UpdateForm user){
+        return new MapSqlParameterSource()
+                .addValue("id", user.getId())
+                .addValue("firstName", user.getFirstName())
+                .addValue("lastName", user.getLastName())
+                .addValue("email", user.getEmail())
+                .addValue("phone", user.getPhone())
+                .addValue("address", user.getAddress())
+                .addValue("title", user.getTitle())
+                .addValue("bio", user.getBio());
+    }
+
+    private SqlParameterSource getSqlParameterSource(User user) {
+        return new MapSqlParameterSource()
+                .addValue("firstName", user.getFirstName())
+                .addValue("lastName", user.getLastName())
+                .addValue("email", user.getEmail())
+                .addValue("password", encoder.encode(user.getPassword()));
     }
 
     private Boolean isLinkExpired(String key, VerificationType password) {

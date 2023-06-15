@@ -44,6 +44,7 @@ export class LoginComponent {
               ),
             };
           } else {
+            //console.log(response.data.refresh_token);
             localStorage.setItem(Key.TOKEN, response.data.access_token);
             localStorage.setItem(
               Key.REFRESH_TOKEN,

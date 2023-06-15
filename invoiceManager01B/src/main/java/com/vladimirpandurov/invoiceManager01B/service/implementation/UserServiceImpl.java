@@ -4,6 +4,7 @@ import com.vladimirpandurov.invoiceManager01B.domain.Role;
 import com.vladimirpandurov.invoiceManager01B.domain.User;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import com.vladimirpandurov.invoiceManager01B.dtomapper.UserDTOMapper;
+import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
 import com.vladimirpandurov.invoiceManager01B.repository.RoleRepository;
 import com.vladimirpandurov.invoiceManager01B.repository.UserRepository;
 import com.vladimirpandurov.invoiceManager01B.service.UserService;
@@ -64,6 +65,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO verifyAccountKey(String key) {
         return mapToUserDTO(this.userRepository.verifyAccountKey(key));
+    }
+
+    @Override
+    public UserDTO updateUserDetails(UpdateForm user) {
+        return mapToUserDTO(this.userRepository.updateUserDetails(user));
+    }
+
+    @Override
+    public UserDTO getUserById(Long userId) {
+      return  mapToUserDTO(this.userRepository.get(userId));
+    }
+
+    @Override
+    public void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword) {
+        this.userRepository.updatePassword(id, currentPassword, newPassword, confirmNewPassword);
     }
 
 

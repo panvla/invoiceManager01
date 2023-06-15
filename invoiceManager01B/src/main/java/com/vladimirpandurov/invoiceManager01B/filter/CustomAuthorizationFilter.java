@@ -39,11 +39,11 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try{
-            Map<String , String> values = getRequestValues(request);
             String token = getToken(request);
-            if(tokenProvider.isTokenValid(values.get(EMAIL_KEY), token)){
-                List<GrantedAuthority> authorities = this.tokenProvider.getAuthorities(values.get(TOKEN_KEY));
-                Authentication authentication = this.tokenProvider.getAuthentication(values.get(EMAIL_KEY), authorities, request);
+            Long userId = getUserId(request);
+            if(tokenProvider.isTokenValid(userId, token)){
+                List<GrantedAuthority> authorities = this.tokenProvider.getAuthorities(token);
+                Authentication authentication = this.tokenProvider.getAuthentication(userId, authorities, request);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }else {
                 SecurityContextHolder.clearContext();
@@ -65,8 +65,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 request.getMethod().equalsIgnoreCase(HTTP_OPTIONS_METHOD) || asList(PUBLIC_ROUTES).contains(request.getRequestURI());
     }
 
-    private Map<String, String> getRequestValues(HttpServletRequest request) {
-        return Map.of(EMAIL_KEY, this.tokenProvider.getSubject(getToken(request), request), TOKEN_KEY, getToken(request));
+    private Long getUserId(HttpServletRequest request) {
+        return this.tokenProvider.getSubject(getToken(request), request);
     }
 
     private String getToken(HttpServletRequest request) {

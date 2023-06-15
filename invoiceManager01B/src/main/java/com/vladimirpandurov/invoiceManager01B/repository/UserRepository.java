@@ -2,6 +2,7 @@ package com.vladimirpandurov.invoiceManager01B.repository;
 
 import com.vladimirpandurov.invoiceManager01B.domain.User;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
+import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
 
 import java.util.Collection;
 
@@ -26,4 +27,8 @@ public interface UserRepository<T extends User> {
     void renewPassword(String key, String password, String confirmPassword);
 
     User verifyAccountKey(String key);
+
+    User updateUserDetails(UpdateForm user);
+
+    void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword);
 }

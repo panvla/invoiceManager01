@@ -6,6 +6,7 @@ import com.vladimirpandurov.invoiceManager01B.domain.UserPrincipal;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import com.vladimirpandurov.invoiceManager01B.exception.ApiException;
 import com.vladimirpandurov.invoiceManager01B.form.LoginForm;
+import com.vladimirpandurov.invoiceManager01B.form.SettingsForm;
 import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
 import com.vladimirpandurov.invoiceManager01B.form.UpdatePasswordForm;
 import com.vladimirpandurov.invoiceManager01B.provider.TokenProvider;
@@ -83,7 +84,7 @@ public class UserResource {
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                         .timeStamp(LocalDateTime.now().toString())
-                        .data(Map.of("user", user))
+                        .data(Map.of("user", user, "roles", this.roleService.getRoles()))
                         .message("Profile Retrieved")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
@@ -217,6 +218,47 @@ public class UserResource {
                 .message("User updated")
                 .status(HttpStatus.OK)
                 .statusCode(HttpStatus.OK.value())
+                .build()
+        );
+    }
+    @PatchMapping("/update/role/{roleName}")
+    public ResponseEntity<HttpResponse> updateUserRole(Authentication authentication, @PathVariable("roleName") String roleName) {
+        UserDTO userDTO = getAuthenticatedUser(authentication);
+        this.userService.updateUserRole(userDTO.getId(), roleName);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                .data(Map.of("user", this.userService.getUserById(userDTO.getId()), "roles", roleService.getRoles()))
+                .timeStamp(LocalDateTime.now().toString())
+                .message("Role updated successfully")
+                .status(HttpStatus.OK)
+                .statusCode(HttpStatus.OK.value())
+                .build()
+        );
+    }
+    @PatchMapping("/update/settings")
+    public ResponseEntity<HttpResponse> updateAccountSettings(Authentication authentication, @RequestBody @Valid SettingsForm form) {
+        UserDTO userDTO = getAuthenticatedUser(authentication);
+        this.userService.updateAccountSettings(userDTO.getId(), form.getEnabled(), form.getNotLocked());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                .data(Map.of("user", userService.getUserById(userDTO.getId()), "roles", roleService.getRoles()))
+                .timeStamp(LocalDateTime.now().toString())
+                .message("Account settings updated successfully")
+                .status(HttpStatus.OK)
+                .statusCode(HttpStatus.OK.value())
+                .build()
+        );
+    }
+    @PatchMapping("/togglemfa")
+    public ResponseEntity<HttpResponse> toggleMfa(Authentication authentication) {
+        UserDTO user = this.userService.toggleMfa(getAuthenticatedUser(authentication).getEmail());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                .data(Map.of("user", user, "roles", this.roleService.getRoles()))
+                .timeStamp(LocalDateTime.now().toString())
+                .message("Multi_Factor Authentication update")
+                .statusCode(HttpStatus.OK.value())
+                .status(HttpStatus.OK)
                 .build()
         );
     }

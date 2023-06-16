@@ -1,5 +1,6 @@
 package com.vladimirpandurov.invoiceManager01B.repository.implementation;
 
+import com.vladimirpandurov.invoiceManager01B.domain.HttpResponse;
 import com.vladimirpandurov.invoiceManager01B.domain.Role;
 import com.vladimirpandurov.invoiceManager01B.domain.User;
 import com.vladimirpandurov.invoiceManager01B.domain.UserPrincipal;
@@ -10,20 +11,24 @@ import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
 import com.vladimirpandurov.invoiceManager01B.repository.RoleRepository;
 import com.vladimirpandurov.invoiceManager01B.repository.UserRepository;
 import com.vladimirpandurov.invoiceManager01B.rowmapper.UserRowMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.Collection;
@@ -37,6 +42,7 @@ import static com.vladimirpandurov.invoiceManager01B.enumeration.VerificationTyp
 import static com.vladimirpandurov.invoiceManager01B.query.UserQuery.*;
 import static com.vladimirpandurov.invoiceManager01B.utils.SmsUtils.sendSMS;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DateFormatUtils.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
@@ -267,6 +273,32 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             }
         }else{
             throw new ApiException("Incorrect current password. Please try again.");
+        }
+    }
+
+    @Override
+    public void updateAccountSettings(Long userId, Boolean enabled, Boolean notLocked) {
+        try{
+            jdbc.update(UPDATE_USER_SETTINGS_QUERY, Map.of("userId", userId, "enabled", enabled, "notLocked", notLocked));
+        }catch (Exception exception){
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again");
+        }
+    }
+
+    @Override
+    public User toggleMfa(String email) {
+        User user = getUserByEmail(email);
+        if(isBlank(user.getPhone())){
+            throw new ApiException("You need a phone number to change Multi-Factor Authentications.");
+        }
+        user.setUsingMfa(!user.isUsingMfa());
+        try{
+            jdbc.update(TOGGLE_USER_MFA_QUERY, Map.of("email", email, "isUsingMfa", user.isUsingMfa()));
+            return user;
+        }catch (Exception exception){
+            log.error(exception.getMessage());
+            throw new ApiException("Unable to update Multi-Factor Authentication");
         }
     }
 

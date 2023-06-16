@@ -24,4 +24,10 @@ public interface UserService {
     UserDTO getUserById(Long userId);
 
     void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword);
+
+    void updateUserRole(Long userId, String roleName);
+
+    void updateAccountSettings(Long id, Boolean enabled, Boolean notLocked);
+
+    UserDTO toggleMfa(String email);
 }

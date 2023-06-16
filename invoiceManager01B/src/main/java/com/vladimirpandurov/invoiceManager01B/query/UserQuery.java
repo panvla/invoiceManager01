@@ -21,5 +21,7 @@ public class UserQuery {
     public static final String UPDATE_USER_DETAILS_QUERY = "UPDATE Users SET first_name = :firstName, last_name = :lastName,  email = :email,phone= :phone, address = :address, title = :title, bio = :bio WHERE id = :id";
     public static final String SELECT_USER_BY_ID_QUERY = "SELECT * FROM Users WHERE id = :id";
     public static final String UPDATE_USER_PASSWORD_BY_ID_QUERY = "UPDATE Users SET password = :password WHERE id = :userId";
+    public static final String UPDATE_USER_SETTINGS_QUERY = "UPDATE Users SET enabled = :enabled, non_locked = :notLocked WHERE id = :userId";
+    public static final String TOGGLE_USER_MFA_QUERY = "UPDATE Users SET using_mfa = :isUsingMfa, WHERE email = :email";
     //public static final String DELETE_USER_FROM_PASSWORD_VERIFICATION_QUERY = "";
 }

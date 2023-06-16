@@ -82,6 +82,21 @@ public class UserServiceImpl implements UserService {
         this.userRepository.updatePassword(id, currentPassword, newPassword, confirmNewPassword);
     }
 
+    @Override
+    public void updateUserRole(Long userId, String roleName) {
+        this.roleRepository.updateUserRole(userId, roleName);
+    }
+
+    @Override
+    public void updateAccountSettings(Long id, Boolean enabled, Boolean notLocked) {
+        this.userRepository.updateAccountSettings(id, enabled, notLocked);
+    }
+
+    @Override
+    public UserDTO toggleMfa(String email) {
+        return mapToUserDTO(this.userRepository.toggleMfa(email));
+    }
+
 
     private UserDTO mapToUserDTO(User user) {
         return fromUser(user, roleRepository.getRoleByUserId(user.getId()));

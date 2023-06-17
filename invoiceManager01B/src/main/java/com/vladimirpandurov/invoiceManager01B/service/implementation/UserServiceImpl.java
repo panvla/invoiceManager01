@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import static com.vladimirpandurov.invoiceManager01B.dtomapper.UserDTOMapper.fromUser;
 
@@ -95,6 +96,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO toggleMfa(String email) {
         return mapToUserDTO(this.userRepository.toggleMfa(email));
+    }
+
+    @Override
+    public void updateImage(UserDTO user, MultipartFile image) {
+        this.userRepository.updateImage(user, image);
     }
 
 

@@ -3,6 +3,7 @@ package com.vladimirpandurov.invoiceManager01B.repository;
 import com.vladimirpandurov.invoiceManager01B.domain.User;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
 
@@ -35,4 +36,6 @@ public interface UserRepository<T extends User> {
     void updateAccountSettings(Long userId, Boolean enabled, Boolean notLocked);
 
     User toggleMfa(String email);
+
+    void updateImage(UserDTO user, MultipartFile image);
 }

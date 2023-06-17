@@ -3,6 +3,7 @@ package com.vladimirpandurov.invoiceManager01B.service;
 import com.vladimirpandurov.invoiceManager01B.domain.User;
 import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
     UserDTO createUser(User user);
@@ -30,4 +31,6 @@ public interface UserService {
     void updateAccountSettings(Long id, Boolean enabled, Boolean notLocked);
 
     UserDTO toggleMfa(String email);
+
+    void updateImage(UserDTO user, MultipartFile image);
 }

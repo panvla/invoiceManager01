@@ -18,15 +18,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.validation.Valid;
+
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -261,6 +267,25 @@ public class UserResource {
                 .status(HttpStatus.OK)
                 .build()
         );
+    }
+    @PatchMapping("/update/image")
+    public ResponseEntity<HttpResponse> updateProfileImage(Authentication authentication, @RequestParam("image")MultipartFile image){
+        UserDTO user = getAuthenticatedUser(authentication);
+        userService.updateImage(user, image);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                .data(Map.of("user", this.userService.getUserById(user.getId()), "roles", roleService.getRoles()))
+                .timeStamp(LocalDateTime.now().toString())
+                .message("Profile image updated")
+                .status(HttpStatus.OK)
+                .statusCode(HttpStatus.OK.value())
+                .build()
+        );
+    }
+
+    @GetMapping(path = "/image/{fileName}", produces = MediaType.IMAGE_PNG_VALUE)
+    public byte[] getProfileImage(@PathVariable("fileName") String fileName) throws IOException {
+        return Files.readAllBytes(Paths.get(System.getProperty("user.home") + "/Documents/panvlaGit/resources/secureCapita/images/" + fileName + ".jpg00"));
     }
 
     private boolean isHeaderAndTokenValid(HttpServletRequest request) {

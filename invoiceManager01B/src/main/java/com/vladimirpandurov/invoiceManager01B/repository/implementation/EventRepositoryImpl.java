@@ -25,12 +25,13 @@ public class EventRepositoryImpl implements EventRepository {
 
     @Override
     public Collection<UserEvent> getEventsByUserId(Long userId) {
-        return jdbc.query(SELECT_BY_EVENTS_BY_USER_ID_QUERY, Map.of("id", userId), new UserEventRowMapper());
+        return jdbc.query(SELECT_EVENTS_BY_USER_ID_QUERY, Map.of("id", userId), new UserEventRowMapper());
     }
 
     @Override
     public void addUserEvent(String email, EventType eventType, String device, String ipAddress) {
-
+        System.out.println("***" + eventType.toString());
+        jdbc.update(INSERT_EVENT_BY_USER_EMAIL_QUERY, Map.of("email", email, "type", eventType.toString(), "device", device, "ipAddress", ipAddress));
     }
 
     @Override

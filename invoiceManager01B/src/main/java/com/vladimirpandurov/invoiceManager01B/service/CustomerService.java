@@ -2,6 +2,7 @@ package com.vladimirpandurov.invoiceManager01B.service;
 
 import com.vladimirpandurov.invoiceManager01B.domain.Customer;
 import com.vladimirpandurov.invoiceManager01B.domain.Invoice;
+import com.vladimirpandurov.invoiceManager01B.domain.Stats;
 import org.springframework.data.domain.Page;
 
 public interface CustomerService {
@@ -20,4 +21,5 @@ public interface CustomerService {
     Page<Invoice> getInvoices(int page, int size);
     void addInvoiceToCustomer(Long id, Invoice invoice);
 
+    Stats getStats();
 }

@@ -2,19 +2,23 @@ package com.vladimirpandurov.invoiceManager01B.service.implementation;
 
 import com.vladimirpandurov.invoiceManager01B.domain.Customer;
 import com.vladimirpandurov.invoiceManager01B.domain.Invoice;
+import com.vladimirpandurov.invoiceManager01B.domain.Stats;
 import com.vladimirpandurov.invoiceManager01B.repository.CustomerRepository;
 import com.vladimirpandurov.invoiceManager01B.repository.InvoiceRepository;
 import com.vladimirpandurov.invoiceManager01B.service.CustomerService;
+import com.vladimirpandurov.invoiceManager01B.rowmapper.StatsRowMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Map;
 
+import static com.vladimirpandurov.invoiceManager01B.query.CustomerQuery.STATS_QUERY;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 
 @Service
@@ -23,8 +27,10 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 @Slf4j
 public class CustomerServiceImpl implements CustomerService {
 
+
     private final CustomerRepository customerRepository;
     private final InvoiceRepository invoiceRepository;
+    private final NamedParameterJdbcTemplate jdbc;
 
     @Override
     public Customer createCustomer(Customer customer) {
@@ -79,5 +85,10 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(id).get();
         invoice.setCustomer(customer);
         invoiceRepository.save(invoice);
+    }
+
+    @Override
+    public Stats getStats() {
+        return jdbc.queryForObject(STATS_QUERY, Map.of(), new StatsRowMapper());
     }
 }

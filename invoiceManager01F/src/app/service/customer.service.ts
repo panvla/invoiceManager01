@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { CustomHttpResponse, Page } from '../interface/app-states';
 import { User } from '../interface/user';
+import { Stats } from '../interface/stats';
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +13,8 @@ export class CustomerService {
 
   constructor(private http: HttpClient) { }
 
-  customers$ = (page: number = 0, size: number = 10) => <Observable<CustomHttpResponse<Page & User>>>
-    this.http.get<CustomHttpResponse<Page & User>>
+  customers$ = (page: number = 0, size: number = 10) => <Observable<CustomHttpResponse<Page & User & Stats>>>
+    this.http.get<CustomHttpResponse<Page & User & Stats>>
       (`${this.server}/customer/list?page=${page}`)
       .pipe(
         tap(console.log),

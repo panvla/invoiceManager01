@@ -4,6 +4,7 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 import { CustomHttpResponse, Page } from '../interface/app-states';
 import { User } from '../interface/user';
 import { Stats } from '../interface/stats';
+import { Customer } from '../interface/customer';
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,13 @@ export class CustomerService {
         tap(console.log),
         catchError(this.handleError)
       );
+
+  newCustomer$ = (customer: Customer) => <Observable<CustomHttpResponse<Customer & User>>>
+    this.http.post<CustomHttpResponse<Customer & User>>
+      (`${this.server}/customer/create`, customer)
+      .pipe(
+        tap(console.log),
+        catchError(this.handleError));
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     console.log(error);

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, map, of, startWith } from 'rxjs';
 import { DataState } from 'src/app/enum/data-state';
 import { EventType } from 'src/app/enum/event-type';
@@ -26,7 +27,7 @@ export class HomeComponent implements OnInit {
   readonly DataState = DataState;
   readonly EventType = EventType;
 
-  constructor(private customerService: CustomerService, private userService: UserService) { }
+  constructor(private router: Router, private customerService: CustomerService, private userService: UserService) { }
 
 
   ngOnInit(): void {
@@ -63,7 +64,7 @@ export class HomeComponent implements OnInit {
   }
 
   selectCustomer(customer: Customer): void {
-
+    this.router.navigate([`/customers/${customer.id}`]);
   }
 
 }

@@ -51,7 +51,7 @@
                                     </td>
                                     <td>{{ customer.type }}</td>
                                     <td>
-                                        <button type="button" (click)="selectCustomer(customer)"
+                                        <button type="button" [routerLink]="['/customers', customer.id]"
                                             class="btn btn-info">View</button>
                                     </td>
                                 </tr>

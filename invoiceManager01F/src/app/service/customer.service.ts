@@ -38,7 +38,14 @@ export class CustomerService {
 
   customer$ = (customerId: number) => <Observable<CustomHttpResponse<CustomerState>>>
     this.http.get<CustomHttpResponse<CustomerState>>
-      (`${this.server}/customer/get${customerId}`).pipe(
+      (`${this.server}/customer/get/${customerId}`).pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
+
+  update$ = (customer: Customer) => <Observable<CustomHttpResponse<CustomerState>>>
+    this.http.put<CustomHttpResponse<CustomerState>>
+      (`${this.server}/customer/update`, customer).pipe(
         tap(console.log),
         catchError(this.handleError)
       );

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, map, startWith } from 'rxjs';
+import { NgForm } from '@angular/forms';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { BehaviorSubject, Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { DataState } from 'src/app/enum/data-state';
 import { CustomHttpResponse, CustomerState } from 'src/app/interface/app-states';
 import { State } from 'src/app/interface/state';
@@ -22,16 +23,40 @@ export class CustomerComponent {
   showLogs$ = this.showLogsSubject.asObservable();
   readonly DataState = DataState;
 
-  constructor(private router: Router, private customerService: CustomerService) { }
+  constructor(private activatedRoute: ActivatedRoute, private customerService: CustomerService) { }
 
   ngOnInit(): void {
-    this.customerState$ = this.customerService.customer$(1).pipe(
+    this.customerState$ = this.activatedRoute.paramMap.pipe(
+      switchMap((params: ParamMap) => {
+        return this.customerService.customer$(+params.get('id')).pipe(
+          map(response => {
+            console.log(response);
+            this.dataSubject.next(response);
+            return { dataState: DataState.LOADED, appData: response };
+          }),
+          startWith({ dataState: DataState.LOADING }),
+          catchError((error: string) => {
+            return of({ dataState: DataState.ERROR, error })
+          })
+        )
+      })
+    );
+  }
+
+  updateCustomer(customerForm: NgForm): void {
+    this.isLoadingSubject.next(true);
+    this.customerState$ = this.customerService.update$(customerForm.value).pipe(
       map(response => {
         console.log(response);
-        this.dataSubject.next(response);
-        return { dataState: DataState.LOADED, appData: response };
+        this.dataSubject.next({ ...response, data: { ...response.data, customer: { ...response.data.customer, invoices: this.dataSubject.value.data.customer.invoices } } });
+        this.isLoadingSubject.next(false);
+        return { dataState: DataState.LOADED, appData: this.dataSubject.value };
       }),
-      startWith({ dataState: DataState.LOADED })
+      startWith({ dataState: DataState.LOADED, appData: this.dataSubject.value }),
+      catchError((error: string) => {
+        this.isLoadingSubject.next(false);
+        return of({ dataState: DataState.ERROR, error })
+      })
     );
   }
 

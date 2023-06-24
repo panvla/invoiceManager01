@@ -106,7 +106,7 @@ public class CustomerResource {
                 .build()
         );
     }
-    @PostMapping("/invoice/new")
+    @GetMapping("/invoice/new")
     public ResponseEntity<HttpResponse> newInvoice(@AuthenticationPrincipal UserDTO user) {
         return ResponseEntity.ok(
                 HttpResponse.builder()
@@ -156,7 +156,7 @@ public class CustomerResource {
                 .timeStamp(LocalDateTime.now().toString())
                 .data(Map.of("user", userService.getUserByEmail(user.getEmail()),
                         "customers", customerService.getCustomers()))
-                .message("Customers retrieved")
+                .message(String.format("Invoice added to customer with ID: %s", id))
                 .status(HttpStatus.OK)
                 .statusCode(HttpStatus.OK.value())
                 .build()

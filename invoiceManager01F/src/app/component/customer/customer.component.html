@@ -175,15 +175,15 @@
                                         <td>{{ invoice.services }}</td>
                                         <td>
                                             <span class="badge " [ngClass]="[
-                                            invoice.status === 'ACTIVE' ? ' bg-success' : '',
-                                            invoice.status === 'PENDING' ? ' bg-primary' : '',
-                                            invoice.status === 'BANNED' ? ' bg-danger' : '',
-                                            invoice.status === 'INACTIVE' ? ' bg-info' : ''
+                                            invoice.status === 'PENDING' ? ' bg-success' : '',
+                                            invoice.status === 'PAID' ? ' bg-primary' : '',
+                                            invoice.status === 'CANCELED' ? ' bg-danger' : '',
+                                            invoice.status === 'OVERDUE' ? ' bg-info' : ''
                                             ]">
                                                 {{invoice.status}}
                                             </span>
                                         </td>
-                                        <td>{{ invoice.date }}</td>
+                                        <td>{{ invoice.date | data: 'mediumDate' }}</td>
                                         <td>{{ invoice.total }}</td>
                                         <td>
                                             <button type="button"

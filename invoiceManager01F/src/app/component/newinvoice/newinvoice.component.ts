@@ -38,7 +38,7 @@ export class NewinvoiceComponent implements OnInit {
   }
 
   newInvoice(newInvoiceForm: NgForm): void {
-    //this.dataSubject.next({ ...this.dataSubject.value, message: null });
+    this.dataSubject.next({ ...this.dataSubject.value, message: '' });
     this.isLoadingSubject.next(true);
     this.newInvoiceState$ = this.customerService.createInvoice$(newInvoiceForm.value.customerId, newInvoiceForm.value).pipe(
       map(response => {

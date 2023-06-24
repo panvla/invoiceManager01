@@ -12,6 +12,7 @@ import { AuthenticationGuard } from './guard/authentication.guard';
 import { NewcustomerComponent } from './component/newcustomer/newcustomer.component';
 import { NewinvoiceComponent } from './component/newinvoice/newinvoice.component';
 import { InvoiceComponent } from './component/invoice/invoice.component';
+import { InvoicesComponent } from './component/invoices/invoices.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -23,7 +24,7 @@ const routes: Routes = [
   { path: 'customers', component: CustomersComponent, canActivate: [AuthenticationGuard] },
   { path: 'customers/new', component: NewcustomerComponent, canActivate: [AuthenticationGuard] },
   { path: 'invoices/new', component: NewinvoiceComponent, canActivate: [AuthenticationGuard] },
-  { path: 'invoices', component: InvoiceComponent, canActivate: [AuthenticationGuard] },
+  { path: 'invoices', component: InvoicesComponent, canActivate: [AuthenticationGuard] },
   { path: 'customers/:id', component: CustomerComponent, canActivate: [AuthenticationGuard] },
   { path: 'invoices/:id/:invoiceNumber', component: InvoiceComponent, canActivate: [AuthenticationGuard] },
   { path: '', component: HomeComponent, canActivate: [AuthenticationGuard] },

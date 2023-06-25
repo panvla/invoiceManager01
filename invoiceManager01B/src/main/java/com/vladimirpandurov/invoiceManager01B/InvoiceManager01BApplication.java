@@ -34,7 +34,7 @@ public class InvoiceManager01BApplication {
 				"Accept", "Jwt-Token", "Authorization", "Origin, Accept", "X-Requested-With", "Access-Control-Request-Method",
 				"Access-Control-Request-Headers"));
 		corsConfiguration.setExposedHeaders(Arrays.asList("Jwt-Token", "Authorization", "Content-Disposition",
-				"Content-Length", "Date", "ETag", "Expires", "Last-Modified", "Location", "Server", "Set-Cookie", "X-Content-Type-Options")); // Add all the exposed headers here
+				"Content-Length", "Date", "ETag", "Expires", "Last-Modified", "Location", "Server", "Set-Cookie", "X-Content-Type-Options", "File-Name")); // Add all the exposed headers here
 		corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS")); // Add all the allowed HTTP methods here
 		urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
 		return new CorsFilter(urlBasedCorsConfigurationSource);

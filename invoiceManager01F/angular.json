@@ -13,6 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "allowedCommonJsDependencies": ["jspdf"],
             "outputPath": "dist/invoice-manager01-f",
             "index": "src/index.html",
             "main": "src/main.ts",

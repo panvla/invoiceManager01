@@ -72,9 +72,6 @@ public class UserResource {
     }
 
 
-
-
-
     @PostMapping("/register")
     public ResponseEntity<HttpResponse> saveUser(@RequestBody @Valid User user) {
         UserDTO userDTO = this.userService.createUser(user);
@@ -84,7 +81,7 @@ public class UserResource {
                 .data(Map.of("user", userDTO))
                 .status(HttpStatus.CREATED)
                 .statusCode(HttpStatus.CREATED.value())
-                .message("User created")
+                .message(String.format("User created for user %s", user.getFirstName()))
                 .build()
         );
     }

@@ -103,6 +103,13 @@ export class UserService {
     localStorage.removeItem(Key.REFRESH_TOKEN);
   }
 
+  save$ = (user: User) => <Observable<CustomHttpResponse<Profile>>>
+    this.http.post<CustomHttpResponse<Profile>>
+      (`${this.server}/user/register`, user).pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
+
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     console.log(error);

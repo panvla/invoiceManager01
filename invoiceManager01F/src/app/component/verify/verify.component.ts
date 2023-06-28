@@ -45,6 +45,7 @@ export class VerifyComponent implements OnInit {
 
   renewPassword(resetPasswordform: NgForm): void {
     this.isLoadingSubject.next(true);
+    console.log(resetPasswordform.value);
     this.verifyState$ = this.userService.renewPassword$({
       userId: this.userSubject.value.id,
       password: resetPasswordform.value.password,

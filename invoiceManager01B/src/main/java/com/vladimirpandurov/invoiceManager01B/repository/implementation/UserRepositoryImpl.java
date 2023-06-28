@@ -11,6 +11,7 @@ import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
 import com.vladimirpandurov.invoiceManager01B.repository.RoleRepository;
 import com.vladimirpandurov.invoiceManager01B.repository.UserRepository;
 import com.vladimirpandurov.invoiceManager01B.rowmapper.UserRowMapper;
+import com.vladimirpandurov.invoiceManager01B.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static com.vladimirpandurov.invoiceManager01B.enumeration.RoleType.ROLE_USER;
 import static com.vladimirpandurov.invoiceManager01B.enumeration.VerificationType.ACCOUNT;
@@ -62,6 +64,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
     private final NamedParameterJdbcTemplate jdbc;
     private final RoleRepository<Role> roleRepository;
     private final BCryptPasswordEncoder encoder;
+    private final EmailService emailService;
 
     @Override
     public User create(User user) {
@@ -80,7 +83,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             //Save URL in verification table
             jdbc.update(INSERT_ACCOUNT_VERIFICATION_URL_QUERY, Map.of("userId", user.getId(), "url", verificationUrl));
             //Send email to user with verification URL
-            //emailService.sendVerificationUrl(user.getFirstName(), user.getEmail(), verificationUrl,true, ACCOUNT);
+            sendEmail(user.getFirstName(), user.getEmail(), verificationUrl, ACCOUNT);
             user.setEnabled(true);
             user.setNotLocked(true);
             //Return the newly created user
@@ -93,7 +96,18 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }
     }
 
-
+    private void sendEmail(String firstName, String email, String verificationUrl,  VerificationType verificationType) {
+        CompletableFuture<Void> future = CompletableFuture.runAsync(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    emailService.sendVerificationEmail(firstName, email, verificationUrl, verificationType);
+                }catch (Exception exception){
+                    throw new ApiException("Unable to send email");
+                }
+            }
+        });
+    }
 
 
     @Override
@@ -204,6 +218,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
                 jdbc.update(DELETE_PASSWORD_VERIFICATION_BY_USER_ID_QUERY, Map.of("userId", user.getId()));
                 jdbc.update(INSERT_PASSWORD_VERIFICATION_QUERY, Map.of("userId", user.getId(), "url", verificationUrl, "expirationDate", expirationDate));
                 //TODO send email with url to user
+                sendEmail(user.getFirstName(), email, verificationUrl, VerificationType.PASSWORD);
                 log.info("Verification URL: {}", verificationUrl);
 
         }catch (Exception exception){
@@ -227,6 +242,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     @Override
     public void renewPassword(String key, String password, String confirmPassword) {
+        log.info("u renewPassword metodi password je {} i confirmPassword je {}", password, confirmPassword);
         if(!password.equals(confirmPassword)) throw new ApiException("Password don't match. Please try again.");
         try{
             jdbc.update(UPDATE_USER_PASSWORD_BY_URL_QUERY, Map.of("password", encoder.encode(password), "url", getVerificationUrl(key, PASSWORD.getType())));

@@ -11,7 +11,7 @@ public class NewPasswordForm {
     @NotNull(message = "ID cannot be null or empty")
     private Long userId;
     @NotEmpty(message = "Password cannot be empty")
-    private String passwword;
+    private String password;
     @NotEmpty(message = "Confirmed password cannot be empty")
     private String confirmPassword;
 }

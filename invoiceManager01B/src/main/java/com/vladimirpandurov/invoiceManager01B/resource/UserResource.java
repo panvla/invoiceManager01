@@ -17,6 +17,7 @@ import com.vladimirpandurov.invoiceManager01B.utils.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,6 +51,7 @@ import static org.springframework.security.authentication.UsernamePasswordAuthen
 @RequestMapping(path="/user")
 @RequiredArgsConstructor
 @CrossOrigin
+@Slf4j
 public class UserResource {
     private static final String TOKEN_PREFIX = "Bearer ";
     private final UserService userService;
@@ -167,7 +169,8 @@ public class UserResource {
     }
     @PutMapping("/new/password")
     public ResponseEntity<HttpResponse> resetPasswordWithKey(@RequestBody @Valid NewPasswordForm form) {
-        this.userService.updatePassword(form.getUserId(), form.getPasswword(), form.getConfirmPassword());
+        log.info("u controleru metodi password je {} i confirmPassword je {}", form.getPassword(), form.getConfirmPassword());
+        this.userService.updatePassword(form.getUserId(), form.getPassword(), form.getConfirmPassword());
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                 .timeStamp(LocalDateTime.now().toString())

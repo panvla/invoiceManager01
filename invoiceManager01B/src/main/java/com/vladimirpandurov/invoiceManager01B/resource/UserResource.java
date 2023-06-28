@@ -7,10 +7,7 @@ import com.vladimirpandurov.invoiceManager01B.dto.UserDTO;
 import com.vladimirpandurov.invoiceManager01B.enumeration.EventType;
 import com.vladimirpandurov.invoiceManager01B.event.NewUserEvent;
 import com.vladimirpandurov.invoiceManager01B.exception.ApiException;
-import com.vladimirpandurov.invoiceManager01B.form.LoginForm;
-import com.vladimirpandurov.invoiceManager01B.form.SettingsForm;
-import com.vladimirpandurov.invoiceManager01B.form.UpdateForm;
-import com.vladimirpandurov.invoiceManager01B.form.UpdatePasswordForm;
+import com.vladimirpandurov.invoiceManager01B.form.*;
 import com.vladimirpandurov.invoiceManager01B.provider.TokenProvider;
 import com.vladimirpandurov.invoiceManager01B.service.EventService;
 import com.vladimirpandurov.invoiceManager01B.service.RoleService;
@@ -142,6 +139,19 @@ public class UserResource {
         );
     }
 
+    @GetMapping("/verify/account/{key}")
+    public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {
+
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(LocalDateTime.now().toString())
+                        .message(this.userService.verifyAccountKey(key).isEnabled()? "Account already verified" : "Account verified")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
     @GetMapping("/verify/password/{key}")
     public ResponseEntity<HttpResponse> verifyPassword(@PathVariable("key") String key) {
         UserDTO user = this.userService.verifyPasswordKey(key);
@@ -155,9 +165,9 @@ public class UserResource {
                         .build()
         );
     }
-    @PostMapping("/resetpassword/{key}/{password}/{confirmPassword}")
-    public ResponseEntity<HttpResponse> verifyPasswordUrl(@PathVariable("key") String key, @PathVariable("password") String password, @PathVariable("confirmPassword") String confirmPassword) {
-        this.userService.renewPassword(key, password, confirmPassword);
+    @PutMapping("/new/password")
+    public ResponseEntity<HttpResponse> resetPasswordWithKey(@RequestBody @Valid NewPasswordForm form) {
+        this.userService.updatePassword(form.getUserId(), form.getPasswword(), form.getConfirmPassword());
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                 .timeStamp(LocalDateTime.now().toString())
@@ -183,18 +193,7 @@ public class UserResource {
         );
     }
 
-    @GetMapping("/verify/account/{key}")
-    public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {
 
-        return ResponseEntity.ok().body(
-                HttpResponse.builder()
-                .timeStamp(LocalDateTime.now().toString())
-                .message(this.userService.verifyAccountKey(key).isEnabled()? "Account already verified" : "Account verified")
-                .status(HttpStatus.OK)
-                .statusCode(HttpStatus.OK.value())
-                .build()
-        );
-    }
     @GetMapping("/refresh/token")
     public ResponseEntity<HttpResponse> refreshToken(HttpServletRequest request) {
         if(isHeaderAndTokenValid(request)){

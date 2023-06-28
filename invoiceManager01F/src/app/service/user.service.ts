@@ -4,7 +4,7 @@ import {
   HttpHeaders,
 } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { CustomHttpResponse, Profile } from '../interface/app-states';
+import { AccountType, CustomHttpResponse, Profile } from '../interface/app-states';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { User } from '../interface/user';
 import { Key } from '../enum/key';
@@ -36,6 +36,13 @@ export class UserService {
         )
         .pipe(tap(console.log), catchError(this.handleError))
     );
+
+  verify$ = (key: string, type: AccountType) => <Observable<CustomHttpResponse<Profile>>>
+    this.http.get<CustomHttpResponse<Profile>>
+      (`${this.server}/user/verify/${type}/${key}`).pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
 
   profile$ = () =>
     <Observable<CustomHttpResponse<Profile>>>(
@@ -113,6 +120,13 @@ export class UserService {
   requestPasswordReset$ = (email: string) => <Observable<CustomHttpResponse<Profile>>>
     this.http.get<CustomHttpResponse<Profile>>
       (`${this.server}/user/resetpassword/${email}`).pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
+
+  renewPassword$ = (form: { userId: number, password: string, confirmPassword: string }) => <Observable<CustomHttpResponse<Profile>>>
+    this.http.put<CustomHttpResponse<Profile>>
+      (`${this.server}/user/new/password`, form).pipe(
         tap(console.log),
         catchError(this.handleError)
       );
